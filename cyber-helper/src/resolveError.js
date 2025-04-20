@@ -1,9 +1,13 @@
-const API_URL = 'https://v7rxxi579a.execute-api.eu-north-1.amazonaws.com/dev/helper/helper';
+const API_URL = process.env.REACT_APP_API_URL || 'https://v7rxxi579a.execute-api.eu-north-1.amazonaws.com/dev/helper/helper';
 
 export default async function resolveErrorCode(errorCode) {
     try {
         console.log('Fetching from API:', API_URL);
         console.log('Payload:', { errorCode });
+
+        if (!errorCode || typeof errorCode !== 'string') {
+            throw new Error('Invalid error code: Must be a non-empty string');
+        }
 
         const response = await fetch(API_URL, {
             method: 'POST',
@@ -18,13 +22,12 @@ export default async function resolveErrorCode(errorCode) {
 
         if (!response.ok) {
             const errText = await response.text();
-            throw new Error(`Failed to resolve error. Status: ${response.status} - ${errText}`);
+            throw new Error(`Failed to resolve error. Status: ${response.status} - ${errText || 'Unknown error'}`);
         }
 
         const data = await response.json();
-        console.log('Raw API Response:', JSON.stringify(data, null, 2)); // Log the full response
+        console.log('Raw API Response:', JSON.stringify(data, null, 2));
 
-        // Handle both Lambda Proxy and direct responses
         if (data.body) {
             const parsedBody = JSON.parse(data.body);
             console.log('Parsed Response (Proxy):', parsedBody);

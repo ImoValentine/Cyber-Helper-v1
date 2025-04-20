@@ -1,38 +1,304 @@
-.App {
-  text-align: center;
+/* Reset default margins and padding for html and body */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow-x: hidden; /* Prevent horizontal scroll */
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+/* Set the background color for the entire UI */
+body, .main-container {
+  background-color: #0b0c2a; /* Deep blue background */
+  color: #ffffff; /* White text for readability */
+  margin: 0;
+  padding: 0;
+  position: relative; /* Ensure absolute positioning of logo works */
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+/* Main container */
+.main-container {
+  min-height: 100vh; /* Ensure the container takes up the full viewport height */
   display: flex;
   flex-direction: column;
+}
+
+/* Marquee */
+.marquee-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0; /* Ensure it starts at the left edge */
+  width: 100%;
+  background-color: #1a1a1a;
+  color: gray;
+  z-index: 1000;
+  overflow: hidden;
+  height: 40px;
+  display: flex;
   align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-.App-link {
-  color: #61dafb;
+.marquee-track {
+  display: flex;
+  animation: marquee 30s linear infinite;
+  white-space: nowrap;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
+.marquee-content {
+  padding-right: 100px;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-100%); }
+}
+
+/* Content wrapper with offset for marquee and centering */
+.content-wrapper {
+  flex: 1;
+  margin-top: 40px; /* Offset for fixed marquee */
+  margin-left: auto;
+  margin-right: auto;
+  padding: 20px;
+  padding-left: 200px; /* Adjust for logo (180px + 20px padding) */
+  max-width: 1200px; /* Limit the width for better centering */
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Logo positioning */
+.logo {
+  width: 180px;
+  height: 180px;
+  position: absolute;
+  left: 0; /* Directly against the left edge */
+  top: 40px; /* Directly below the marquee (which is 40px tall) */
+  z-index: 500; /* Ensure it stays above other content but below marquee */
+  margin: 0; /* Remove any margin */
+  padding: 0; /* Remove any padding */
+  display: block; /* Ensure it behaves as a block element */
+  line-height: 0; /* Remove any line-height spacing */
+  vertical-align: top; /* Prevent baseline alignment issues */
+}
+
+/* Footer styles - Default Design */
+.footer {
+  background-color: #1a1a1a; /* Match marquee background */
+  color: #ffffff;
+  text-align: center;
+  padding: 15px 0;
+  font-size: 0.9rem;
+  font-weight: 400;
+  border-top: 1px solid #2a2b6a; /* Subtle border for separation */
+}
+
+/* Alternative Footer Design 1: Gradient Background */
+.footer.gradient {
+  background: linear-gradient(90deg, #1a1a1a, #2a2b6a);
+  color: #ffffff;
+  text-align: center;
+  padding: 20px 0;
+  font-size: 1rem;
+  font-weight: 500;
+  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.3); /* Add a subtle shadow */
+}
+
+/* Alternative Footer Design 2: Minimalist with Hover Effect */
+.footer.minimalist {
+  background-color: #0b0c2a; /* Match main background */
+  color: #cccccc;
+  text-align: center;
+  padding: 10px 0;
+  font-size: 0.85rem;
+  font-weight: 300;
+  border-top: 1px dashed #666;
+  transition: background-color 0.3s ease;
+}
+
+.footer.minimalist:hover {
+  background-color: #1a1b4b;
+  color: #ffffff;
+}
+
+/* Alternative Footer Design 3: Modern with Border Accent */
+.footer.modern {
+  background-color: #1a1a1a;
+  color: #ffffff;
+  text-align: center;
+  padding: 15px 0;
+  font-size: 0.9rem;
+  font-weight: 400;
+  position: relative;
+  border-top: 3px solid #007bff; /* Accent border */
+}
+
+/* Header section styles */
+.header-section {
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Center the header content */
+  margin-bottom: 20px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+/* Adjust the Cyber Helper heading */
+h2 {
+  font-size: 3.5rem; /* Match the logo's visual prominence */
+  margin: 0;
+}
+
+/* Adjust alert styles for dark background */
+.alert {
+  animation: fadeIn 0.5s ease-in;
+  background-color: #ff4d4d; /* Keep alert background red for visibility */
+  color: #ffffff;
+}
+
+/* Animation for fading in elements */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Adjust form and other elements for dark background */
+.form-label {
+  color: #ffffff;
+}
+
+.list-group-item {
+  background-color: #1a1b4b; /* Darker background for list items */
+  color: #ffffff;
+  border-color: #2a2b6a;
+}
+
+.list-group-item-action:hover {
+  background-color: #2a2b6a;
+  color: #ffffff;
+}
+
+/* Adjust pre elements for dark background */
+pre.bg-light {
+  background-color: #1a1b4b !important;
+  color: #ffffff;
+}
+
+pre.bg-success {
+  background-color: #28a745 !important; /* Keep success green */
+  color: #ffffff;
+}
+
+pre.bg-warning {
+  background-color: #ffc107 !important; /* Keep warning yellow */
+  color: #000000; /* Black text for readability */
+}
+
+/* Adjust buttons for dark theme */
+.btn-primary {
+  background-color: #007bff;
+  border-color: #007bff;
+}
+
+.btn-primary:hover {
+  background-color: #0056b3;
+  border-color: #0056b3;
+}
+
+.btn-link {
+  color: #66b0ff;
+}
+
+.btn-link:hover {
+  color: #99c7ff;
+}
+
+/* Dark mode adjustments */
+.dark-mode {
+  background-color: #0b0c2a; /* Already set, but reinforce */
+  color: #ffffff;
+}
+
+.dark-mode .btn-dark {
+  background-color: #ffffff;
+  color: #0b0c2a;
+}
+
+.dark-mode .btn-light {
+  background-color: #1a1b4b;
+  color: #ffffff;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .content-wrapper {
+    padding: 10px;
+    padding-left: 170px; /* Adjust for smaller logo (150px + 20px padding) */
   }
-  to {
-    transform: rotate(360deg);
+  h2 {
+    font-size: 2.8rem; /* Scale down proportionally */
+  }
+  h4 {
+    font-size: 1.2rem;
+  }
+  .btn {
+    font-size: 0.9rem;
+    padding: 8px 16px;
+  }
+  .list-group-item {
+    font-size: 0.9rem;
+  }
+  pre {
+    font-size: 0.9rem;
+  }
+  .marquee-content {
+    font-size: 0.9rem;
+  }
+  .logo {
+    width: 150px;
+    height: 150px;
+    left: 0; /* Directly against the left edge */
+    top: 40px; /* Keep it directly below the marquee */
+  }
+  .footer, .footer.gradient, .footer.minimalist, .footer.modern {
+    font-size: 0.8rem;
+    padding: 10px 0;
+  }
+}
+
+@media (max-width: 480px) {
+  h2 {
+    font-size: 2.2rem; /* Scale down further */
+  }
+  h4 {
+    font-size: 1rem;
+  }
+  .btn {
+    font-size: 0.8rem;
+    padding: 6px 12px;
+  }
+  .marquee-content {
+    font-size: 0.8rem;
+  }
+  .logo {
+    width: 120px;
+    height: 120px;
+    left: 0; /* Directly against the left edge */
+    top: 40px; /* Keep it directly below the marquee */
+  }
+  .content-wrapper {
+    padding-left: 140px; /* Adjust for smaller logo (120px + 20px padding) */
+  }
+  .footer, .footer.gradient, .footer.minimalist, .footer.modern {
+    font-size: 0.75rem;
+    padding: 8px 0;
   }
 }
