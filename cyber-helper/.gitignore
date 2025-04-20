@@ -21,3 +21,22 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# API endpoint
+REACT_APP_API_URL=https://your-api-url.com
+
+# AWS config
+REACT_APP_AWS_ACCESS_KEY_ID=your-access-key
+REACT_APP_AWS_SECRET_ACCESS_KEY=your-secret-key
+REACT_APP_AWS_REGION=your-region
+REACT_APP_S3_BUCKET=your-s3-bucket-name
+
+# AI services keys
+REACT_APP_OPENAI_API_KEY=your-openai-api-key
+REACT_APP_ANTHROPIC_API_KEY=your-anthropic-api-key
+REACT_APP_GROQ_API_KEY=your-groq-api-key
+REACT_APP_GEMINI_API_KEY=your-gemini-api-key
+
+# Other config
+REACT_APP_DEBUG=true
+
