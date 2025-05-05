@@ -4,15 +4,36 @@
     height: 100vh;
 }
 
+
+
+
+.left-side h1 {
+    font-size: 4rem; /* Adjust size as needed */
+    font-weight: bold;
+    text-align: center;
+    margin-top: -15px; /* Moves heading & text up */
+}
+
+
+
 .left-side {
     flex: 1;
     background-color: #0b0c2a; /* Blue background */
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start; /* Align items at the top */
     align-items: center;
     color: #ffffff;
-    padding: 20px;
+    padding-top: 150px; /* Reduced top padding */
+}
+
+
+
+.left-side .secondary-text {
+    font-size: 1.2rem;
+    font-weight: 300;
+    text-align: center;
+    color: #ddd;
 }
 
 .right-side {
@@ -54,7 +75,9 @@
     font-size: 16px;
     border-radius: 5px;
     cursor: pointer;
+    margin-bottom: 10px; /* Creates space between buttons */
 }
+
 
 .auth-form button:hover {
     background-color: #0056b3;
@@ -71,4 +94,41 @@
 
 .auth-form a:hover {
     text-decoration: underline;
+}
+.marquee-wrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: #1a1a1a;
+    color: gray;
+    z-index: 1000;
+    overflow: hidden;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.marquee-track {
+    display: flex;
+    animation: marquee 30s linear infinite;
+    white-space: nowrap;
+}
+
+.animation-wrapper {
+    margin-top: 40px; /* Lower it further */
+}
+
+.marquee-content {
+    padding-right: 100px;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+@keyframes marquee {
+    0% { transform: translateX(0%); }
+    100% { transform: translateX(-100%); }
 }

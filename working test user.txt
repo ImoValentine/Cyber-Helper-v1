@@ -1,5 +1,0 @@
-  "email": "newuser@example.com",
-  "password": "StrongPass123"
-
-https://v7rxxi579a.execute-api.eu-north-1.amazonaws.com/dev3 
-above is login  

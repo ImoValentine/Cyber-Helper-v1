@@ -1,69 +1,97 @@
-import React, { useState, useEffect } from 'react';
-import AuthPage from './pages/AuthPage';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import { Typeahead } from 'react-bootstrap-typeahead';
-import 'react-bootstrap-typeahead/css/Typeahead.min.css';
-import { Collapse, Button } from 'react-bootstrap';
-import resolveErrorCode from './resolveError';
-import './App.css';
-import logo from './Assets/logo.png';
+import React, { useState, useEffect } from "react";
+import { useAuth } from "react-oidc-context";
+import { Typeahead } from "react-bootstrap-typeahead";
+import { Collapse, Button } from "react-bootstrap";
+import resolveErrorCode from "./resolveError";
+import "./App.css";
+import logo from "./Assets/logo.png";
 
 function App() {
-    // Unconditionally initialize our hooks.
-    const [isAuthenticated] = useState(localStorage.getItem('isAuthenticated') === 'true');
-    const [errorCode, setErrorCode] = useState('');
+    const auth = useAuth();
+
+    // Debugging - Log auth object for inspection
+    console.log("Auth Object:", auth);
+    console.log("Auth User:", auth.user);
+    console.log("Auth isAuthenticated:", auth.isAuthenticated);
+
+    // State variables for error code resolution within the main app.
+    const [errorCode, setErrorCode] = useState("");
     const [responses, setResponses] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [errorMsg, setErrorMsg] = useState('');
+    const [errorMsg, setErrorMsg] = useState("");
     const [searchHistory, setSearchHistory] = useState([]);
     const [openSections, setOpenSections] = useState({});
     const [disagreementsOpen, setDisagreementsOpen] = useState(true);
     const [darkMode, setDarkMode] = useState(false);
 
-    // Load settings from localStorage.
+    // Load saved preferences from localStorage.
     useEffect(() => {
-        const savedHistory = localStorage.getItem('searchHistory');
+        const savedHistory = localStorage.getItem("searchHistory");
         if (savedHistory) {
             setSearchHistory(JSON.parse(savedHistory));
         }
-        const savedDarkMode = localStorage.getItem('darkMode');
+        const savedDarkMode = localStorage.getItem("darkMode");
         if (savedDarkMode) {
             setDarkMode(JSON.parse(savedDarkMode));
         }
     }, []);
 
     useEffect(() => {
-        localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
+        localStorage.setItem("searchHistory", JSON.stringify(searchHistory));
     }, [searchHistory]);
 
     useEffect(() => {
-        localStorage.setItem('darkMode', JSON.stringify(darkMode));
+        localStorage.setItem("darkMode", JSON.stringify(darkMode));
     }, [darkMode]);
 
-    // Retrieve the logged-in user's email.
-    const userEmail = localStorage.getItem('userEmail') || '';
-
-    // Helper functions.
+    // Helper functions
     const normalizeStep = (step) => {
         return step
             .toLowerCase()
-            .replace(/[^a-z0-9\s]/g, '')
-            .replace(/\s+/g, ' ')
+            .replace(/[^a-z0-9\s]/g, "")
+            .replace(/\s+/g, " ")
             .trim();
     };
 
     const extractKeyConcepts = (step) => {
         const normalized = normalizeStep(step);
         const commonWords = [
-            'the', 'a', 'an', 'in', 'to', 'for', 'if', 'is', 'and', 'or', 'with', 'by', 'on', 'of',
-            'such', 'as', 'that', 'can', 'be', 'it', 'this', 'your', 'you', 'are', 'was', 'were',
-            'specific', 'details', 'additional', 'information'
+            "the",
+            "a",
+            "an",
+            "in",
+            "to",
+            "for",
+            "if",
+            "is",
+            "and",
+            "or",
+            "with",
+            "by",
+            "on",
+            "of",
+            "such",
+            "as",
+            "that",
+            "can",
+            "be",
+            "it",
+            "this",
+            "your",
+            "you",
+            "are",
+            "was",
+            "were",
+            "specific",
+            "details",
+            "additional",
+            "information",
         ];
         const words = normalized
-            .split(' ')
-            .filter(word => !commonWords.includes(word) && word.length > 2)
+            .split(" ")
+            .filter((word) => !commonWords.includes(word) && word.length > 2)
             .slice(0, 4);
-        return words.join(' ');
+        return words.join(" ");
     };
 
     const areStepsSimilar = (step1, step2) => {
@@ -72,9 +100,9 @@ function App() {
         const normalized1 = normalizeStep(step1);
         const normalized2 = normalizeStep(step2);
 
-        const words1 = new Set(concepts1.split(' '));
-        const words2 = new Set(concepts2.split(' '));
-        const intersection = new Set([...words1].filter(word => words2.has(word)));
+        const words1 = new Set(concepts1.split(" "));
+        const words2 = new Set(concepts2.split(" "));
+        const intersection = new Set([...words1].filter((word) => words2.has(word)));
         const overlap = intersection.size / Math.min(words1.size, words2.size);
 
         if (overlap >= 0.5) return true;
@@ -83,26 +111,26 @@ function App() {
 
     const generateConsensusSummary = (aiResponses, aiWeights) => {
         const stepsByAI = Object.entries(aiResponses).map(([ai, response]) => {
-            const lines = response.split('\n');
-            const stepsStart = lines.findIndex(line =>
-                line.trim().startsWith('To resolve') ||
-                line.trim().startsWith('*') ||
-                line.trim().startsWith('1.')
+            const lines = response.split("\n");
+            const stepsStart = lines.findIndex((line) =>
+                line.trim().startsWith("To resolve") ||
+                line.trim().startsWith("*") ||
+                line.trim().startsWith("1.")
             );
-            const steps = lines.slice(stepsStart).filter(line =>
-                line.trim().startsWith('*') || line.trim().startsWith('1.')
-            );
-            return { ai, steps: steps.map(step => step.trim().replace(/^[0-9*.]\s*/, '')) };
+            const steps = lines
+                .slice(stepsStart)
+                .filter((line) => line.trim().startsWith("*") || line.trim().startsWith("1."));
+            return { ai, steps: steps.map((step) => step.trim().replace(/^[0-9*.]\s*/, "")) };
         });
 
-        const allSteps = stepsByAI.flatMap(entry => entry.steps);
+        const allSteps = stepsByAI.flatMap((entry) => entry.steps);
         const stepGroups = [];
         const usedSteps = new Set();
 
         allSteps.forEach((step, index) => {
             if (usedSteps.has(index)) return;
             const group = { step, weightedScore: 0, ais: [] };
-            stepsByAI.forEach(entry => {
+            stepsByAI.forEach((entry) => {
                 if (entry.steps.includes(step)) {
                     group.ais.push(entry.ai);
                     group.weightedScore += aiWeights[entry.ai] || 0.5;
@@ -112,87 +140,87 @@ function App() {
             for (let j = index + 1; j < allSteps.length; j++) {
                 if (usedSteps.has(j)) continue;
                 if (areStepsSimilar(step, allSteps[j])) {
-                    const ai = stepsByAI.find(entry => entry.steps.includes(allSteps[j])).ai;
+                    const ai = stepsByAI.find((entry) => entry.steps.includes(allSteps[j])).ai;
                     group.ais.push(ai);
                     group.weightedScore += aiWeights[ai] || 0.5;
                     group.indices.push(j);
                 }
             }
-            group.indices.forEach(i => usedSteps.add(i));
+            group.indices.forEach((i) => usedSteps.add(i));
             stepGroups.push(group);
         });
 
         const commonSteps = stepGroups
-            .filter(group => group.weightedScore >= 1.0)
-            .map(group => ({ step: group.step, ais: group.ais }));
+            .filter((group) => group.weightedScore >= 1.0)
+            .map((group) => ({ step: group.step, ais: group.ais }));
 
         const uniqueSteps = stepGroups
-            .filter(group => group.weightedScore < 1.0)
-            .map(group => ({ step: group.step, ai: group.ais[0] }));
+            .filter((group) => group.weightedScore < 1.0)
+            .map((group) => ({ step: group.step, ai: group.ais[0] }));
 
-        const huggingFaceLines = aiResponses.HuggingFace.split('\n');
+        const huggingFaceLines = aiResponses.HuggingFace.split("\n");
         const explanationStart = huggingFaceLines.findIndex(
-            line => line.trim() && !line.includes('Give a short explanation')
+            (line) => line.trim() && !line.includes("Give a short explanation")
         );
-        const explanation = huggingFaceLines[explanationStart] || 'No explanation available.';
+        const explanation = huggingFaceLines[explanationStart] || "No explanation available.";
 
         let summary = `${explanation}\n\nTo resolve this issue, the AIs agree on the following steps:\n`;
         if (commonSteps.length > 0) {
             summary += commonSteps
-                .map((group, index) => `${index + 1}. ${group.step} (suggested by ${group.ais.join(', ')})`)
-                .join('\n');
+                .map((group, index) => `${index + 1}. ${group.step} (suggested by ${group.ais.join(", ")})`)
+                .join("\n");
         } else {
-            summary += 'The AIs did not agree on specific steps.';
+            summary += "The AIs did not agree on specific steps.";
         }
 
         if (uniqueSteps.length > 0) {
-            summary += '\n\nNotable disagreements (steps suggested by only one AI):\n';
+            summary += "\n\nNotable disagreements (steps suggested by only one AI):\n";
             uniqueSteps.forEach((group, index) => {
                 summary += `${index + 1}. ${group.step} (suggested by ${group.ai})\n`;
             });
         } else {
-            summary += '\n\nThere were no notable disagreements among the AIs.';
+            summary += "\n\nThere were no notable disagreements among the AIs.";
         }
 
         return summary;
     };
 
     const errorCodes = [
-        'ERR_CONNECTION_TIMED_OUT',
-        'Windows security log event: Windows 4704',
-        '404 Not Found',
-        '500 Internal Server Error',
-        'ERR_SSL_PROTOCOL_ERROR',
-        'DNS_PROBE_FINISHED_NXDOMAIN',
+        "ERR_CONNECTION_TIMED_OUT",
+        "Windows security log event: Windows 4704",
+        "404 Not Found",
+        "500 Internal Server Error",
+        "ERR_SSL_PROTOCOL_ERROR",
+        "DNS_PROBE_FINISHED_NXDOMAIN",
     ];
 
-    // Submits the error code for resolution.
+    // Handler for submitting the error code.
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         setResponses(null);
-        setErrorMsg('');
+        setErrorMsg("");
 
         try {
             const normalizedErrorCode = normalizeStep(errorCode);
-            console.log('Original error code:', errorCode);
-            console.log('Normalized error code:', normalizedErrorCode);
+            console.log("Original error code:", errorCode);
+            console.log("Normalized error code:", normalizedErrorCode);
 
-            if (!normalizedErrorCode || typeof normalizedErrorCode !== 'string' || normalizedErrorCode === '') {
-                throw new Error('Invalid error code: Must be a non-empty string after normalization');
+            if (!normalizedErrorCode || typeof normalizedErrorCode !== "string" || normalizedErrorCode === "") {
+                throw new Error("Invalid error code: Must be a non-empty string after normalization");
             }
 
             const data = await resolveErrorCode(normalizedErrorCode);
-            console.log('Resolved Data:', data);
+            console.log("Resolved Data:", data);
 
             if (data.aiResponses && Object.keys(data.aiResponses).length > 0) {
                 data.resolutionSummary = generateConsensusSummary(data.aiResponses, data.aiWeights || {});
-                setSearchHistory(prev => {
-                    const newHistory = [errorCode, ...prev.filter(item => item !== errorCode)];
+                setSearchHistory((prev) => {
+                    const newHistory = [errorCode, ...prev.filter((item) => item !== errorCode)];
                     return newHistory.slice(0, 5);
                 });
                 const initialOpenSections = {};
-                Object.keys(data.aiResponses).forEach(ai => {
+                Object.keys(data.aiResponses).forEach((ai) => {
                     initialOpenSections[ai] = true;
                 });
                 setOpenSections(initialOpenSections);
@@ -200,55 +228,51 @@ function App() {
 
             setResponses(data);
 
-            if (
-                Object.keys(data.aiResponses).length === 0 &&
-                data.resolutionSummary.includes('Error resolving code')
-            ) {
+            if (Object.keys(data.aiResponses).length === 0 && data.resolutionSummary.includes("Error resolving code")) {
                 setErrorMsg(data.resolutionSummary);
             }
         } catch (err) {
-            console.error('Fetch failed:', err);
-            setErrorMsg(
-                `Failed to resolve error code: ${err.message}. Please check the API configuration or try again later.`
-            );
+            console.error("Fetch failed:", err);
+            setErrorMsg(`Failed to resolve error code: ${err.message}. Please check the API configuration or try again later.`);
         } finally {
             setLoading(false);
         }
     };
 
+    // Handler for submitting feedback.
     const handleFeedback = async (wasHelpful) => {
         try {
             const feedbackUrl = `${process.env.REACT_APP_API_URL}/feedback`;
-            console.log('Submitting feedback to:', feedbackUrl);
+            console.log("Submitting feedback to:", feedbackUrl);
             const response = await fetch(feedbackUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     errorCode,
                     aiResponses: responses.aiResponses,
                     resolutionSummary: responses.resolutionSummary,
-                    wasHelpful
-                })
+                    wasHelpful,
+                }),
             });
-            console.log('Feedback response status:', response.status);
+            console.log("Feedback response status:", response.status);
             if (!response.ok) {
                 const errorText = await response.text();
                 throw new Error(`Failed to submit feedback: ${response.status} - ${errorText}`);
             }
-            alert('Thank you for your feedback!');
+            alert("Thank you for your feedback!");
         } catch (err) {
-            console.error('Feedback submission failed:', err);
+            console.error("Feedback submission failed:", err);
             setErrorMsg(`Failed to submit feedback: ${err.message}. Please try again later.`);
         }
     };
 
     const getDocLink = (errorCode) => {
-        if (errorCode.toLowerCase().startsWith('windows')) {
-            return 'https://learn.microsoft.com/en-us/windows/';
-        } else if (errorCode.includes('ERR_')) {
-            return 'https://www.chromium.org/developers/';
+        if (errorCode.toLowerCase().startsWith("windows")) {
+            return "https://learn.microsoft.com/en-us/windows/";
+        } else if (errorCode.includes("ERR_")) {
+            return "https://www.chromium.org/developers/";
         } else if (/^\d{3}\s/.test(errorCode)) {
-            return 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Status';
+            return "https://developer.mozilla.org/en-US/docs/Web/HTTP/Status";
         }
         return null;
     };
@@ -259,79 +283,90 @@ function App() {
     };
 
     const toggleSection = (ai) => {
-        setOpenSections(prev => ({
+        setOpenSections((prev) => ({
             ...prev,
-            [ai]: !prev[ai]
+            [ai]: !prev[ai],
         }));
     };
 
     const toggleDarkMode = () => {
-        setDarkMode(prev => !prev);
+        setDarkMode((prev) => !prev);
     };
 
     const steps =
         responses?.resolutionSummary
             ?.match(/\d+\.\s*.+?(?=\n|$)/g)
-            ?.map(step => step.replace(/\(suggested by.*?\)/, '')) || [];
+            ?.map((step) => step.replace(/\(suggested by.*?\)/, "")) || [];
 
-    // If not authenticated, let the user log in using the original AuthPage.
-    // No modifications to AuthPage are needed.
-    if (!isAuthenticated) {
-        return <AuthPage />;
-    }
-
-    // Render the main application.
     return (
-        <div className={`main-container ${darkMode ? 'dark-mode' : ''}`}>
+        <div className={`main-container ${darkMode ? "dark-mode" : ""}`}>
+            {/* Marquee */}
             <div className="marquee-wrapper">
                 <div className="marquee-track">
-          <span className="marquee-content">
-            AI- Agent007, reliable solutions, consensus logic, Groq, Hugggingface, Gemini, Making solutions easier, Reducing operational costs
-          </span>
                     <span className="marquee-content">
-            AI- Agent007, reliable solutions, consensus logic, Groq, Hugggingface, Gemini, Making solutions easier, Reducing operational costs
-          </span>
+                        AI- Agent007, reliable solutions, consensus logic, Groq, Hugggingface, Gemini, Making solutions easier, Reducing operational costs
+                    </span>
+                    <span className="marquee-content">
+                        AI- Agent007, reliable solutions, consensus logic, Groq, Hugggingface, Gemini, Making solutions easier, Reducing operational costs
+                    </span>
                 </div>
             </div>
 
+            {/* Logo */}
             <img src={logo} alt="Cyber Helper Logo" className="logo" />
 
-            <div className="content-wrapper">
-                <div className="header-section">
-                    <div className="header-right">
-                        <h2>Cyber Helper</h2>
-                        <Button variant={darkMode ? 'light' : 'dark'} onClick={toggleDarkMode}>
-                            {darkMode ? 'Light Mode' : 'Dark Mode'}
-                        </Button>
-                    </div>
-                    {userEmail && <p>Welcome, {userEmail}</p>}
+            {/* Header containing Cyber Helper heading, Dark Mode & Sign Out buttons */}
+            <header className="app-header">
+                <h2>Cyber Helper</h2>
+                <div className="header-buttons">
+                    <Button
+                        variant={darkMode ? "light" : "dark"}
+                        onClick={toggleDarkMode}
+                        className="dark-mode-btn"
+                    >
+                        {darkMode ? "Light Mode" : "Dark Mode"}
+                    </Button>
+                    <Button
+                        variant="outline-danger"
+                        onClick={() => auth.removeUser()}
+                        className="signout-btn"
+                    >
+                        Sign Out
+                    </Button>
                 </div>
+            </header>
 
-                <form onSubmit={handleSubmit} className={loading ? 'opacity-50' : ''}>
-                    <div className="mb-3">
+            {/* Content Wrapper */}
+            <div className="content-wrapper">
+                <h4>Welcome, {auth.user?.profile.email}</h4>
+                <form onSubmit={handleSubmit} className={loading ? "opacity-50" : ""}>
+                    <div className="form-group">
                         <label htmlFor="errorCode" className="form-label">
                             Enter Error Code
                         </label>
-                        <Typeahead
-                            id="errorCode"
-                            onChange={(selected) => setErrorCode(selected[0] || '')}
-                            onInputChange={(text) => setErrorCode(text)}
-                            options={errorCodes}
-                            placeholder="Enter an error code..."
-                            selected={errorCode ? [errorCode] : []}
-                            inputProps={{ required: true, disabled: loading }}
-                        />
+                        <div className="typeahead-container">
+                            <Typeahead
+                                onChange={(selected) => setErrorCode(selected[0] || "")}
+                                onInputChange={(text) => setErrorCode(text)}
+                                options={errorCodes}
+                                placeholder="Enter an error code..."
+                                selected={errorCode ? [errorCode] : []}
+                                inputProps={{ id: "errorCode", name: "errorCode", required: true, disabled: loading }}
+                            />
+                        </div>
                     </div>
-                    <button type="submit" className="btn btn-primary" disabled={loading}>
-                        {loading ? (
-                            <>
-                                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                Analyzing...
-                            </>
-                        ) : (
-                            'Analyze'
-                        )}
-                    </button>
+                    <div className="button-container">
+                        <button type="submit" className="btn btn-primary btn-large" disabled={loading}>
+                            {loading ? (
+                                <>
+                                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                    Analyzing...
+                                </>
+                            ) : (
+                                "Analyze"
+                            )}
+                        </button>
+                    </div>
                 </form>
 
                 {searchHistory.length > 0 && (
@@ -342,7 +377,7 @@ function App() {
                                 <li
                                     key={index}
                                     className="list-group-item list-group-item-action"
-                                    style={{ cursor: 'pointer' }}
+                                    style={{ cursor: "pointer" }}
                                     onClick={() => handleHistoryClick(code)}
                                 >
                                     {code}
@@ -362,19 +397,21 @@ function App() {
                                 <div key={ai} className="mb-3">
                                     <h5
                                         onClick={() => toggleSection(ai)}
-                                        style={{ cursor: 'pointer' }}
+                                        style={{ cursor: "pointer" }}
                                         aria-controls={`${ai}-response`}
                                         aria-expanded={openSections[ai] || false}
                                     >
-                                        {ai} {openSections[ai] ? '▼' : '▶'}
+                                        {ai} {openSections[ai] ? "▼" : "▶"}
                                     </h5>
                                     <Collapse in={openSections[ai] || false}>
                                         <div id={`${ai}-response`}>
-                      <pre className="bg-light p-3 rounded" style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>
-                        {response.split('\n').map((line, index) => (
-                            <p key={index} className="mb-1">{line}</p>
-                        ))}
-                      </pre>
+                                            <pre className="bg-light p-3 rounded" style={{ whiteSpace: "pre-wrap", wordWrap: "break-word" }}>
+                                                {response.split("\n").map((line, index) => (
+                                                    <p key={index} className="mb-1">
+                                                        {line}
+                                                    </p>
+                                                ))}
+                                            </pre>
                                         </div>
                                     </Collapse>
                                 </div>
@@ -386,32 +423,35 @@ function App() {
                         <h4 className="mt-4">Resolution Steps:</h4>
                         {steps.length > 0 ? (
                             <div>
-                <pre className="bg-success text-white p-3 rounded" style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>
-                  {steps.join('\n')}
-                </pre>
+                                <pre className="bg-success text-white p-3 rounded" style={{ whiteSpace: "pre-wrap", wordWrap: "break-word" }}>
+                                    {steps.join("\n")}
+                                </pre>
                             </div>
                         ) : (
                             <p className="text-muted">No steps available.</p>
                         )}
 
-                        {responses.resolutionSummary.includes('Notable disagreements') && (
+                        {responses && responses.resolutionSummary.includes("Notable disagreements") && (
                             <>
                                 <button
                                     onClick={() => setDisagreementsOpen(!disagreementsOpen)}
                                     className="btn btn-link mt-2"
                                     aria-expanded={disagreementsOpen}
                                 >
-                                    {disagreementsOpen ? 'Hide Notable Disagreements ▼' : 'Show Notable Disagreements ▶'}
+                                    {disagreementsOpen ? "Hide Notable Disagreements ▼" : "Show Notable Disagreements ▶"}
                                 </button>
                                 <Collapse in={disagreementsOpen}>
                                     <div>
-                    <pre className="bg-warning text-dark p-3 rounded mt-2" style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>
-                      {responses.resolutionSummary.split('\nNotable disagreements')[1]
-                          .split('\n')
-                          .map((line, index) => (
-                              <p key={index} className="mb-1">{line}</p>
-                          ))}
-                    </pre>
+                                        <pre className="bg-warning text-dark p-3 rounded mt-2" style={{ whiteSpace: "pre-wrap", wordWrap: "break-word" }}>
+                                            {responses.resolutionSummary
+                                                .split("\nNotable disagreements")[1]
+                                                .split("\n")
+                                                .map((line, index) => (
+                                                    <p key={index} className="mb-1">
+                                                        {line}
+                                                    </p>
+                                                ))}
+                                        </pre>
                                     </div>
                                 </Collapse>
                             </>
@@ -441,7 +481,9 @@ function App() {
             </div>
 
             <footer className="footer">
-                <p>Designed and Built by Imraan Jacobs - Owner of Jacobs Dynamic Development</p>
+                <p>
+                    Designed and Built by Imraan Jacobs - Owner of Jacobs Dynamic Development
+                </p>
             </footer>
         </div>
     );

@@ -1,139 +1,65 @@
-import React, { useState } from 'react';
-import './AuthPage.css';
+// src/pages/AuthPage.jsx
+import React from "react";
+import { useAuth } from "react-oidc-context";
+import { Navigate } from "react-router-dom";
+import "./AuthPage.css";
+import Lottie from "react-lottie";
+import animationData from "../Assets/animation.json";
 
 const AuthPage = () => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [message, setMessage] = useState('');
+    const auth = useAuth();
 
-    const clearMessages = () => setMessage('');
-
-    const handleLogin = async () => {
-        if (!email || !password) {
-            setMessage("Please fill in both fields.");
-            return;
-        }
-
-        try {
-            const response = await fetch('https://v7rxxi579a.execute-api.eu-north-1.amazonaws.com/dev3/LoginUser', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Cache-Control': 'no-cache',
-                    'Pragma': 'no-cache'
-                },
-                body: JSON.stringify({ email: email.trim(), password: password.trim() }),
-            });
-
-            // Parse the top-level response JSON
-            const jsonData = await response.json();
-            console.log('Login Response Status:', response.status);
-            console.log('Login Response OK:', response.ok);
-            console.log('Login Response Data:', jsonData);
-
-            // If API Gateway wraps the actual payload in a "body" property, parse it
-            let loginData = jsonData;
-            if (jsonData.body) {
-                try {
-                    loginData = JSON.parse(jsonData.body);
-                } catch (err) {
-                    console.error("Error parsing nested JSON:", err);
-                }
-            }
-
-            if (response.ok && loginData.message === 'Login successful') {
-                console.log('Login success condition met, redirecting...');
-                setMessage("✅ Login successful!");
-                localStorage.setItem('isAuthenticated', 'true');
-                localStorage.setItem('userEmail', email);
-                window.location.href = '/app';
-                return;
-            }
-
-            setMessage(loginData.error || "❌ Invalid credentials.");
-        } catch (error) {
-            console.error("Login Fetch Error:", error.message);
-            console.error("Error Stack:", error.stack);
-            setMessage(`❌ Failed to connect to the server: ${error.message}.`);
-        }
+    const defaultOptions = {
+        loop: true,
+        autoplay: true,
+        animationData: animationData,
+        renderer: "svg",
     };
 
-    const handleRegister = async () => {
-        if (!email || !password) {
-            setMessage("Please fill in both fields.");
-            return;
-        }
+    if (auth.isLoading) {
+        return <div>Loading...</div>;
+    }
 
-        try {
-            const response = await fetch('https://v7rxxi579a.execute-api.eu-north-1.amazonaws.com/dev2reg/Register', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ email: email.trim(), password: password.trim() }),
-            });
-
-            const jsonData = await response.json();
-            console.log('Register Response Status:', response.status);
-            console.log('Register Response OK:', response.ok);
-            console.log('Register Response Data:', jsonData);
-
-            // Optionally parse nested JSON from "body" if needed
-            let registerData = jsonData;
-            if (jsonData.body) {
-                try {
-                    registerData = JSON.parse(jsonData.body);
-                } catch (err) {
-                    console.error("Error parsing nested JSON for register:", err);
-                }
-            }
-
-            if (response.status === 201) {
-                setMessage("✅ Registration successful!");
-                console.log('Register success:', registerData);
-            } else {
-                setMessage(registerData.error || "❌ Registration failed.");
-            }
-        } catch (error) {
-            console.error("Register Fetch Error:", error.message);
-            console.error("Error Stack:", error.stack);
-            setMessage(`❌ Failed to connect to the server: ${error.message}.`);
-        }
-    };
+    // When already authenticated, redirect using <Navigate>
+    if (auth.isAuthenticated) {
+        return <Navigate to="/app" replace />;
+    }
 
     return (
-        <div className="auth-container">
-            <div className="left-side">
-                <h1>Welcome</h1>
-                <p>Sign in or register to access Cyber Helper</p>
-            </div>
-            <div className="right-side">
-                <div className="auth-form">
-                    <h2>Login or Register</h2>
-                    <input
-                        type="email"
-                        value={email}
-                        onChange={(e) => {
-                            setEmail(e.target.value);
-                            clearMessages();
-                        }}
-                        placeholder="Enter your email"
-                    />
-                    <input
-                        type="password"
-                        value={password}
-                        onChange={(e) => {
-                            setPassword(e.target.value);
-                            clearMessages();
-                        }}
-                        placeholder="Enter your password"
-                    />
-                    <button onClick={handleLogin}>Login</button>
-                    <button onClick={handleRegister}>Register</button>
-                    {message && <p>{message}</p>}
+        <>
+            {/* Marquee Section */}
+            <div className="marquee-wrapper">
+                <div className="marquee-track">
+                    <div className="marquee-content">
+                        AI- Agent007, reliable solutions, consensus logic, Groq, Hugggingface, Gemini, Making solutions easier, Reducing operational costs
+                    </div>
+                    <div className="marquee-content">
+                        AI- Agent007, reliable solutions, consensus logic, Groq, Hugggingface, Gemini, Making solutions easier, Reducing operational costs
+                    </div>
                 </div>
             </div>
-        </div>
+
+            {/* Auth Container Section */}
+            <div className="auth-container">
+                <div className="left-side">
+                    <h1>Cyber Helper</h1>
+                    <p className="secondary-text">Deconstructing Errors, Constructing Solutions</p>
+                    <p>Sign in to access Cyber Helper.</p>
+                    <div className="animation-wrapper" style={{ marginTop: "40px" }}>
+                        <Lottie options={defaultOptions} height={200} width={200} speed={1.5} />
+                    </div>
+                </div>
+
+                <div className="right-side">
+                    <div className="auth-form">
+                        <h2>Login</h2>
+                        <button className="btn btn-primary" onClick={() => auth.signinRedirect()}>
+                            Sign in with Cognito
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </>
     );
 };
 
