@@ -346,7 +346,7 @@ pre.bg-success {
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  display: inline-block !important; /* Ensure visibility */
+  display: inline-block !important;
 }
 .signout-btn:hover {
   background-color: #660000;

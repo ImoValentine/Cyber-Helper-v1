@@ -6,15 +6,25 @@ import resolveErrorCode from "./resolveError";
 import "./App.css";
 import logo from "./Assets/logo.png";
 
+// Define errorCodes so they are available for the Typeahead options
+const errorCodes = [
+    "ERR_CONNECTION_TIMED_OUT",
+    "Windows security log event: Windows 4704",
+    "404 Not Found",
+    "500 Internal Server Error",
+    "ERR_SSL_PROTOCOL_ERROR",
+    "DNS_PROBE_FINISHED_NXDOMAIN",
+];
+
 function App() {
     const auth = useAuth();
 
-    // Debugging - Log auth object for inspection
+    // Debugging: Log auth values
     console.log("Auth Object:", auth);
     console.log("Auth User:", auth.user);
     console.log("Auth isAuthenticated:", auth.isAuthenticated);
 
-    // State variables for error code resolution within the main app.
+    // State variables for error resolution
     const [errorCode, setErrorCode] = useState("");
     const [responses, setResponses] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -24,7 +34,7 @@ function App() {
     const [disagreementsOpen, setDisagreementsOpen] = useState(true);
     const [darkMode, setDarkMode] = useState(false);
 
-    // Load saved preferences from localStorage.
+    // Load preferences from localStorage
     useEffect(() => {
         const savedHistory = localStorage.getItem("searchHistory");
         if (savedHistory) {
@@ -185,16 +195,6 @@ function App() {
         return summary;
     };
 
-    const errorCodes = [
-        "ERR_CONNECTION_TIMED_OUT",
-        "Windows security log event: Windows 4704",
-        "404 Not Found",
-        "500 Internal Server Error",
-        "ERR_SSL_PROTOCOL_ERROR",
-        "DNS_PROBE_FINISHED_NXDOMAIN",
-    ];
-
-    // Handler for submitting the error code.
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -239,7 +239,6 @@ function App() {
         }
     };
 
-    // Handler for submitting feedback.
     const handleFeedback = async (wasHelpful) => {
         try {
             const feedbackUrl = `${process.env.REACT_APP_API_URL}/feedback`;
@@ -303,29 +302,27 @@ function App() {
             {/* Marquee */}
             <div className="marquee-wrapper">
                 <div className="marquee-track">
+          <span className="marquee-content">
+            AI- Agent007, reliable solutions, consensus logic, Groq, Hugggingface, Gemini, Making solutions easier, Reducing operational costs
+          </span>
                     <span className="marquee-content">
-                        AI- Agent007, reliable solutions, consensus logic, Groq, Hugggingface, Gemini, Making solutions easier, Reducing operational costs
-                    </span>
-                    <span className="marquee-content">
-                        AI- Agent007, reliable solutions, consensus logic, Groq, Hugggingface, Gemini, Making solutions easier, Reducing operational costs
-                    </span>
+            AI- Agent007, reliable solutions, consensus logic, Groq, Hugggingface, Gemini, Making solutions easier, Reducing operational costs
+          </span>
                 </div>
             </div>
 
             {/* Logo */}
             <img src={logo} alt="Cyber Helper Logo" className="logo" />
 
-            {/* Header containing Cyber Helper heading, Dark Mode & Sign Out buttons */}
+            {/* Header with Cyber Helper heading, Dark Mode & Sign Out button */}
             <header className="app-header">
-                <h2>Cyber Helper</h2>
-                <div className="header-buttons">
-                    <Button
-                        variant={darkMode ? "light" : "dark"}
-                        onClick={toggleDarkMode}
-                        className="dark-mode-btn"
-                    >
+                <div className="header-section">
+                    <h2>Cyber Helper</h2>
+                    <Button variant={darkMode ? "light" : "dark"} onClick={toggleDarkMode}>
                         {darkMode ? "Light Mode" : "Dark Mode"}
                     </Button>
+                </div>
+                <div className="header-buttons">
                     <Button
                         variant="outline-danger"
                         onClick={() => auth.removeUser()}
@@ -395,23 +392,16 @@ function App() {
                         {Object.entries(responses.aiResponses).length > 0 ? (
                             Object.entries(responses.aiResponses).map(([ai, response]) => (
                                 <div key={ai} className="mb-3">
-                                    <h5
-                                        onClick={() => toggleSection(ai)}
-                                        style={{ cursor: "pointer" }}
-                                        aria-controls={`${ai}-response`}
-                                        aria-expanded={openSections[ai] || false}
-                                    >
+                                    <h5 onClick={() => toggleSection(ai)} style={{ cursor: "pointer" }}>
                                         {ai} {openSections[ai] ? "▼" : "▶"}
                                     </h5>
-                                    <Collapse in={openSections[ai] || false}>
+                                    <Collapse in={openSections[ai]}>
                                         <div id={`${ai}-response`}>
-                                            <pre className="bg-light p-3 rounded" style={{ whiteSpace: "pre-wrap", wordWrap: "break-word" }}>
-                                                {response.split("\n").map((line, index) => (
-                                                    <p key={index} className="mb-1">
-                                                        {line}
-                                                    </p>
-                                                ))}
-                                            </pre>
+                      <pre className="bg-light p-3 rounded" style={{ whiteSpace: "pre-wrap", wordWrap: "break-word" }}>
+                        {response.split("\n").map((line, index) => (
+                            <p key={index} className="mb-1">{line}</p>
+                        ))}
+                      </pre>
                                         </div>
                                     </Collapse>
                                 </div>
@@ -423,35 +413,31 @@ function App() {
                         <h4 className="mt-4">Resolution Steps:</h4>
                         {steps.length > 0 ? (
                             <div>
-                                <pre className="bg-success text-white p-3 rounded" style={{ whiteSpace: "pre-wrap", wordWrap: "break-word" }}>
-                                    {steps.join("\n")}
-                                </pre>
+                <pre className="bg-success text-white p-3 rounded" style={{ whiteSpace: "pre-wrap", wordWrap: "break-word" }}>
+                  {steps.join("\n")}
+                </pre>
                             </div>
                         ) : (
                             <p className="text-muted">No steps available.</p>
                         )}
 
-                        {responses && responses.resolutionSummary.includes("Notable disagreements") && (
+                        {responses.resolutionSummary.includes("Notable disagreements") && (
                             <>
                                 <button
                                     onClick={() => setDisagreementsOpen(!disagreementsOpen)}
                                     className="btn btn-link mt-2"
-                                    aria-expanded={disagreementsOpen}
                                 >
                                     {disagreementsOpen ? "Hide Notable Disagreements ▼" : "Show Notable Disagreements ▶"}
                                 </button>
                                 <Collapse in={disagreementsOpen}>
                                     <div>
-                                        <pre className="bg-warning text-dark p-3 rounded mt-2" style={{ whiteSpace: "pre-wrap", wordWrap: "break-word" }}>
-                                            {responses.resolutionSummary
-                                                .split("\nNotable disagreements")[1]
-                                                .split("\n")
-                                                .map((line, index) => (
-                                                    <p key={index} className="mb-1">
-                                                        {line}
-                                                    </p>
-                                                ))}
-                                        </pre>
+                    <pre className="bg-warning text-dark p-3 rounded mt-2" style={{ whiteSpace: "pre-wrap", wordWrap: "break-word" }}>
+                      {responses.resolutionSummary.split("\nNotable disagreements")[1]
+                          .split("\n")
+                          .map((line, index) => (
+                              <p key={index} className="mb-1">{line}</p>
+                          ))}
+                    </pre>
                                     </div>
                                 </Collapse>
                             </>
@@ -481,9 +467,7 @@ function App() {
             </div>
 
             <footer className="footer">
-                <p>
-                    Designed and Built by Imraan Jacobs - Owner of Jacobs Dynamic Development
-                </p>
+                <p>Designed and Built by Imraan Jacobs - Owner of Jacobs Dynamic Development</p>
             </footer>
         </div>
     );
